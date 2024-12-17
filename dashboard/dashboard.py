@@ -6,15 +6,15 @@ import os
 
 sns.set(style='darkgrid')
 
-hourly_data = pd.read_csv(r'..\data\hour.csv')
-daily_data = pd.read_csv(r'..\day.csv')
+hourly_data = pd.read_csv(r'hour.csv')
+daily_data = pd.read_csv(r'day.csv')
 
 hourly_data['dteday'] = pd.to_datetime(hourly_data['dteday'])
 daily_data['dteday'] = pd.to_datetime(daily_data['dteday'])
 
 
 with st.sidebar:
-    st.image(r"..\sepeda.jpg")
+    st.image(r"sepeda.jpg")
     st.header("Filter Data")
     start_date, end_date = st.date_input(
         "Rentang Waktu", 
