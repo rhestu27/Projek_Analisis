@@ -6,15 +6,15 @@ import os
 
 sns.set(style='darkgrid')
 
-hourly_data = pd.read_csv(r'dashboard/hour.csv')
-daily_data = pd.read_csv(r'dashboard/day.csv')
+hourly_data = pd.read_csv(r'hour.csv')
+daily_data = pd.read_csv(r'day.csv')
 
 hourly_data['dteday'] = pd.to_datetime(hourly_data['dteday'])
 daily_data['dteday'] = pd.to_datetime(daily_data['dteday'])
 
 
 with st.sidebar:
-    st.image(r"dashboard/sepeda.jpg")
+    st.image(r"sepeda.jpg")
     st.header("Filter Data")
     start_date, end_date = st.date_input(
         "Rentang Waktu", 
@@ -87,6 +87,50 @@ ax.set_xlabel("Hari dalam Minggu", fontsize=12)
 ax.set_ylabel("Rata-rata Penyewaan", fontsize=12)
 ax.tick_params(axis='x', rotation=15)
 st.pyplot(weekday_fig)
+
+hourly_data['day_type'] = hourly_data['workingday'].apply(lambda x: 'Hari Kerja' if x == 1 else 'Akhir Pekan')
+
+day_type_df = hourly_data.groupby("day_type").agg({
+    "cnt": "sum"
+}).reset_index()
+day_type_df.rename(columns={"cnt": "total_rentals"}, inplace=True)
+
+day_type_fig, ax = plt.subplots(figsize=(8, 5))
+colors = ["#72BCD4", "#D3D3D3"]
+sns.barplot(
+    x="day_type",
+    y="total_rentals",
+    data=day_type_df,
+    palette=colors,
+    ax=ax
+)
+ax.set_title("Total Penyewaan Sepeda: Hari Kerja vs Akhir Pekan", loc="center", fontsize=16)
+ax.set_xlabel("Tipe Hari", fontsize=12)
+ax.set_ylabel("Total Penyewaan", fontsize=12)
+
+st.pyplot(day_type_fig)
+
+day_type_df = hourly_data.groupby("day_type").agg({"cnt": "sum"}).reset_index()
+day_type_df.rename(columns={"cnt": "total_rentals"}, inplace=True)
+
+day_type_df["percentage"] = (day_type_df["total_rentals"] / day_type_df["total_rentals"].sum()) * 100
+
+day_type_fig, ax = plt.subplots(figsize=(10, 6))
+plt.bar(day_type_df['day_type'], day_type_df['total_rentals'], color=['#66b3ff', '#ff9999'], alpha=0.7)
+plt.xlabel('Jenis Hari')
+plt.ylabel('Total Penyewaan')
+plt.title('Total Penyewaan Sepeda Berdasarkan Jenis Hari')
+
+for index, row in day_type_df.iterrows():
+    plt.text(index, row['total_rentals'] + 100, f"{row['percentage']:.2f}%", ha='center')
+
+plt.ylim(0, day_type_df['total_rentals'].max() + 1000)
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+
+st.pyplot(day_type_fig)
+
+for index, row in day_type_df.iterrows():
+    st.write(f"{row['day_type']}: {row['total_rentals']} penyewaan ({row['percentage']:.2f}%)")
 
 st.header("Summary Metrics")
 col1, col2, col3 = st.columns(3)
